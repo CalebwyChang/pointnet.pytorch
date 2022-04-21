@@ -2,20 +2,13 @@ import numpy as np
 import math
 import random
 import torch
+from path import Path
 
 
-def read_off(file):
-    first_line = file.readline().strip()
-    if 'OFF' == first_line:
-        n_verts, n_faces, __ = tuple([int(s) for s in file.readline().strip().split(' ')])
-    elif first_line[0:3] == "OFF":
-        n_verts, n_faces, __ = tuple([int(s) for s in first_line[3:].split(' ')])
-    else:
-        raise('Not a valid OFF header')
-    
-    verts = [[float(s) for s in file.readline().strip().split(' ')] for i_vert in range(n_verts)]
-    faces = [[int(s) for s in file.readline().strip().split(' ')][1:] for i_face in range(n_faces)]
-    return verts, faces
+def read_features(path, filename):
+    verts = np.load(path/Path("verts")/filename)
+    faces = np.load(path/Path("faces")/filename)
+    return (verts, faces)
     
     
 class PointSampler(object):
@@ -40,25 +33,24 @@ class PointSampler(object):
 
     def __call__(self, mesh):
         verts, faces = mesh
-        verts = np.array(verts)
-        areas = np.zeros((len(faces)))
+        areas = np.zeros((faces.shape[0]))
 
         for i in range(len(areas)):
-            areas[i] = (self.triangle_area(verts[faces[i][0]],
-                                           verts[faces[i][1]],
-                                           verts[faces[i][2]]))
-            
-        sampled_faces = (random.choices(faces,
-                                      weights=areas,
-                                      cum_weights=None,
-                                      k=self.output_size))
+            areas[i] = (self.triangle_area(verts[faces[i, 0], :],
+                                           verts[faces[i, 1], :],
+                                           verts[faces[i, 2], :]))
+        
+        sampled_faces = (np.random.choice(faces.shape[0],
+                                      size=self.output_size,
+                                      replace=True,
+                                      p=areas/np.sum(areas)))
         
         sampled_points = np.zeros((self.output_size, 3))
 
-        for i in range(len(sampled_faces)):
-            sampled_points[i] = (self.sample_point(verts[sampled_faces[i][0]],
-                                                   verts[sampled_faces[i][1]],
-                                                   verts[sampled_faces[i][2]]))
+        for i in range(self.output_size):
+            sampled_points[i] = (self.sample_point(verts[faces[sampled_faces[i], 0], :],
+                                                   verts[faces[sampled_faces[i], 1], :],
+                                                   verts[faces[sampled_faces[i], 2], :]))
         
         return sampled_points
 

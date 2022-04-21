@@ -36,29 +36,29 @@ class ModelNetDataset(data.Dataset):
         self.files = []
         for category in self.classes.keys():
             new_dir = self.root_dir/Path(category)/folder
-            for file in os.listdir(new_dir):
-                if file.endswith('.off'):
+            for file in os.listdir(new_dir/"verts"):
+                if file.endswith('.npy'):
                     sample = {}
-                    sample['pcd_path'] = new_dir/file
+                    sample["filename"] = file
+                    sample['pcd_path'] = new_dir
                     sample['category'] = category
                     self.files.append(sample)
 
     def __len__(self):
         return len(self.files)
 
-    def __preproc__(self, file):
-        verts, faces = helpers.read_off(file)
+    def __preproc__(self, path, filename):
+        features = helpers.read_features(path, filename)
         if self.transforms:
-            pointcloud = self.transforms((verts, faces))
+            pointcloud = self.transforms(features)
         return pointcloud
 
     def __getitem__(self, idx):
+        filename = self.files[idx]['filename']
         pcd_path = self.files[idx]['pcd_path']
         category = self.files[idx]['category']
-        with open(pcd_path, 'r') as f:
-            pointcloud = self.__preproc__(f)
-        return {'pointcloud': pointcloud,
-                'category': self.classes[category]}
+        pointcloud = self.__preproc__(pcd_path, filename)
+        return pointcloud, self.classes[category]
 
 if __name__ == '__main__':
     dataset = sys.argv[1]
