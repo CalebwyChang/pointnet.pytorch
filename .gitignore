@@ -5,6 +5,5 @@ data
 shapenetcore_partanno_segmentation_benchmark_v0/
 *.so
 .idea*
-cls/
 seg/
 *.egg-info/

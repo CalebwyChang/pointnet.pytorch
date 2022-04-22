@@ -23,7 +23,7 @@ def train():
         '--nepoch', type=int, default=30, help='number of epochs to train for')
     parser.add_argument('--outf', type=str, default='cls', help='output folder')
     parser.add_argument('--model', type=str, default='', help='model path')
-    parser.add_argument('--dataset', type=str, default='..\..\data\ModelNet40_numpy\\', help="dataset path")
+    parser.add_argument('--dataset', type=str, default='../../data/ModelNet40_numpy/', help="dataset path")
     parser.add_argument('--feature_transform', action='store_true', help="use feature transform")
 
     opt = parser.parse_args()
